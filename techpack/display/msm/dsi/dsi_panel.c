@@ -387,6 +387,12 @@ static int dsi_panel_power_off(struct dsi_panel *panel)
 		DSI_DEBUG("TWM Enabled, skip panel power off\n");
 		return rc;
 	}
+
+	if (panel->mi_panel_id == 0x4D323000360200 
+     || panel->mi_panel_id == 0x4D323000420D00) {
+	  mdelay(5);
+	}
+
 	if (gpio_is_valid(panel->reset_config.disp_en_gpio))
 		gpio_set_value(panel->reset_config.disp_en_gpio, 0);
 
@@ -631,9 +637,9 @@ static int dsi_panel_update_doze(struct dsi_panel *panel) {
 	int rc = 0;
 
 	if (panel->doze_mode_active == panel->doze_mode_requested) {
-		DSI_INFO(
-			"[%s] active doze mode is equal to requested mode: %d\n",
-			panel->name, panel->doze_mode_active);
+		//DSI_INFO(
+		//	"[%s] active doze mode is equal to requested mode: %d\n",
+		//	panel->name, panel->doze_mode_active);
 		return 0;
 	}
 
@@ -2826,7 +2832,7 @@ static int dsi_panel_parse_dsc_params(struct dsi_display_mode *mode,
 		priv_info->dsc.config.dsc_panel_id = 0;
 		DSI_DEBUG("mi,mdss-dsc-panel-id not specified\n");
 	} else {
-		DSI_DEBUG("mi,mdss-dsc-panel-id is 0x%llx\n", priv_info->dsc.config.dsc_panel_id);
+		DSI_INFO("mi,mdss-dsc-panel-id is 0x%llx\n", priv_info->dsc.config.dsc_panel_id);
 	}
 
 	rc = utils->read_u32(utils->data, "qcom,mdss-dsc-version", &data);
@@ -3917,7 +3923,8 @@ struct dsi_panel *dsi_panel_get(struct device *parent,
 		DSI_INFO("mi,panel-id not specified\n");
 	} else {
 		DSI_INFO("mi,panel-id 0x%llX\n", panel->mi_panel_id);
-	}
+    }
+
 
 	rc = dsi_panel_parse_panel_mode(panel);
 	if (rc) {
@@ -5100,6 +5107,39 @@ int dsi_panel_switch(struct dsi_panel *panel)
 	return rc;
 }
 
+int dsi_panel_gamma_switch(struct dsi_panel *panel)
+{
+	int rc = 0;
+
+	if (!panel) {
+		DSI_ERR("Invalid params\n");
+		return -EINVAL;
+	}
+
+	if (!panel->panel_initialized) {
+		DSI_ERR("panel_initialized fail\n");
+		return -EINVAL;
+	}
+
+	mutex_lock(&panel->panel_lock);
+	if (panel->cur_mode->timing.refresh_rate == 120){
+		rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_MI_FPS_120_GAMMA);
+	} else if (panel->cur_mode->timing.refresh_rate == 90) {
+		rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_MI_FPS_90_GAMMA);
+	} else if (panel->cur_mode->timing.refresh_rate <= 60){
+		rc = dsi_panel_tx_cmd_set(panel, DSI_CMD_SET_MI_FPS_60_GAMMA);
+	}
+
+	if (rc)
+		DSI_ERR("[%s] failed to send DSI_CMD_SET_MI_FPS_GAMMA cmds, rc=%d\n",
+		       panel->name, rc);
+
+	mutex_unlock(&panel->panel_lock);
+	//DSI_INFO("%s panel: DSI_CMD_SET_MI_FPS_GAMMA\n", panel->type);
+
+	return rc;
+}
+
 int dsi_panel_post_switch(struct dsi_panel *panel)
 {
 	int rc = 0;
@@ -5161,7 +5201,8 @@ int dsi_panel_post_enable(struct dsi_panel *panel)
 error:
 	mutex_unlock(&panel->panel_lock);
 
-	if (panel->mi_panel_id == 0x4D323000360200) {
+	if (panel->mi_panel_id == 0x4D323000360200 
+     || panel->mi_panel_id == 0x4D323000420D00) {
 		dsi_panel_gamma_switch(panel);
 	}
 
