@@ -281,8 +281,6 @@ static inline size_t __must_check size_add(size_t addend1, size_t addend2)
 }
 
 /**
-<<<<<<< HEAD
-=======
  * size_sub() - Calculate size_t subtraction with saturation at SIZE_MAX
  *
  * @minuend: value to subtract from
@@ -306,7 +304,6 @@ static inline size_t __must_check size_sub(size_t minuend, size_t subtrahend)
 }
 
 /**
->>>>>>> v5.4.283
  * array_size() - Calculate size of 2-dimensional array.
  *
  * @a: dimension one
