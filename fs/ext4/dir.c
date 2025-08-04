@@ -86,6 +86,8 @@ int __ext4_check_dir_entry(const char *function, unsigned int line,
 						dir->i_sb->s_blocksize);
 	const int next_offset = ((char *) de - buf) + rlen;
 
+	bool fake = is_fake_entry(dir, lblk, offset, blocksize);
+
 	if (unlikely(rlen < ext4_dir_rec_len(1, fake ? NULL : dir)))
 		error_msg = "rec_len is smaller than minimal";
 	else if (unlikely(rlen % 4 != 0))
