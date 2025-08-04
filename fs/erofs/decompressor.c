@@ -215,13 +215,13 @@ static int z_erofs_lz4_decompress(struct z_erofs_decompress_req *rq, u8 *out,
 	/* decompression inplace is only safe when 0padding is enabled */
 	if (erofs_sb_has_lz4_0padding(EROFS_SB(rq->sb))) {
 		support_0padding = true;
-
-		while (!headpage[inputmargin & ~PAGE_MASK])
+	
+		while (!src)
 			if (!(++inputmargin & ~PAGE_MASK))
 				break;
-
+			
 		if (inputmargin >= rq->inputsize) {
-			kunmap_atomic(headpage);
+			kunmap_atomic(src);
 			return -EIO;
 		}
 	}
