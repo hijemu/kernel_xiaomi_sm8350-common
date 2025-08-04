@@ -106,7 +106,6 @@ extern void ipa3_set_napi_chained_rx(bool enable);
 #else
 static void ipa3_set_napi_chained_rx(bool enable)
 {
-    return 0;
 }
 #endif
 
