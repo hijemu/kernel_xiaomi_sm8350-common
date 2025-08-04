@@ -1621,9 +1621,7 @@ static long kernel_waitid(int which, pid_t upid, struct waitid_info *infop,
 		if (upid < 0)
 			return -EINVAL;
 
-		pid = pidfd_get_pid(upid);
-		if (IS_ERR(pid))
-			return PTR_ERR(pid);
+		pid = find_get_pid(upid);
 		break;
 	default:
 		return -EINVAL;
