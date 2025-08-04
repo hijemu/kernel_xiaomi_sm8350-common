@@ -251,7 +251,6 @@ static int z_erofs_lz4_decompress(struct z_erofs_decompress_req *rq, u8 *out,
 		if (ret >= 0)
 			memset(out + ret, 0, rq->outputsize - ret);
 		ret = -EIO;
-	}
 
 	if (copied)
 		erofs_put_pcpubuf(src);
