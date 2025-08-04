@@ -16,6 +16,9 @@
 #define LZ4_DECOMPRESS_INPLACE_MARGIN(srcsize)  (((srcsize) >> 8) + 32)
 #endif
 
+u8 *generic_copy_inplace_data(struct z_erofs_decompress_req *rq,
+			      u8 *src, unsigned int inputmargin);
+
 struct z_erofs_decompressor {
 	/*
 	 * if destpages have sparsed pages, fill them with bounce pages.
