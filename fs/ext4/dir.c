@@ -55,18 +55,6 @@ static int is_dx_dir(struct inode *inode)
 	return 0;
 }
 
-static bool is_fake_dir_entry(struct ext4_dir_entry_2 *de)
-{
-	/* Check if . or .. , or skip if namelen is 0 */
-	if ((de->name_len > 0) && (de->name_len <= 2) && (de->name[0] == '.') &&
-	    (de->name[1] == '.' || de->name[1] == '\0'))
-		return true;
-	/* Check if this is a csum entry */
-	if (de->file_type == EXT4_FT_DIR_CSUM)
-		return true;
-	return false;
-}
-
 /*
  * Return 0 if the directory entry is OK, and 1 if there is a problem
  *
@@ -86,14 +74,11 @@ int __ext4_check_dir_entry(const char *function, unsigned int line,
 						dir->i_sb->s_blocksize);
 	const int next_offset = ((char *) de - buf) + rlen;
 
-	bool fake = is_fake_entry(dir, lblk, offset, blocksize);
-
-	if (unlikely(rlen < ext4_dir_rec_len(1, fake ? NULL : dir)))
+	if (unlikely(rlen < ext4_dir_rec_len(1, dir)))
 		error_msg = "rec_len is smaller than minimal";
 	else if (unlikely(rlen % 4 != 0))
 		error_msg = "rec_len % 4 != 0";
-	else if (unlikely(rlen < ext4_dir_rec_len(de->name_len,
-							fake ? NULL : dir)))
+	else if (unlikely(rlen < ext4_dir_rec_len(de->name_len, dir)))
 		error_msg = "rec_len is too small for name_len";
 	else if (unlikely(next_offset > size))
 		error_msg = "directory entry overrun";
@@ -112,15 +97,15 @@ int __ext4_check_dir_entry(const char *function, unsigned int line,
 	if (filp)
 		ext4_error_file(filp, function, line, bh->b_blocknr,
 				"bad entry in directory: %s - offset=%u, "
-				"inode=%u, rec_len=%d, size=%d fake=%d",
+				"inode=%u, rec_len=%d, size=%d",
 				error_msg, offset, le32_to_cpu(de->inode),
-				rlen, size, fake);
+				rlen, size);
 	else
 		ext4_error_inode(dir, function, line, bh->b_blocknr,
 				"bad entry in directory: %s - offset=%u, "
-				"inode=%u, rec_len=%d, size=%d fake=%d",
+				"inode=%u, rec_len=%d, size=%d",
 				 error_msg, offset, le32_to_cpu(de->inode),
-				 rlen, size, fake);
+				 rlen, size);
 
 	return 1;
 }
